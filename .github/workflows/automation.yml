@@ -1,86 +1,51 @@
-name: Run Trend Pulse Automation
+name: Generate Articles
 
 on:
   schedule:
-    # Run every 6 hours (4 times per day) at 00:00, 06:00, 12:00, 18:00 UTC
+    # Every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
     - cron: '0 */6 * * *'
-  workflow_dispatch:  # Allow manual triggers
-  push:
-    branches: [ main ]
-    paths:
-      - '**.js'
-      - 'package.json'
-      - '.github/workflows/automation.yml'
+  # Allow manual runs from the GitHub Actions UI
+  workflow_dispatch:
 
 jobs:
-  automate:
+  generate:
     runs-on: ubuntu-latest
-    
+
+    # Needed so the job can commit processed-urls.json back to this repo
+    permissions:
+      contents: write
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0  # Fetch all history for proper git operations
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Create environment file
-      run: |
-        cp .env.example .env
-        echo "NEWSAPI_KEY=${{ secrets.NEWSAPI_KEY }}" >> .env
-        echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> .env
-        echo "DEEPSEEK_BASE_URL=https://api.deepseek.com" >> .env
-        echo "DATABASE_PATH=./articles.db" >> .env
-        echo "SITE_URL=https://trend-pulse.vercel.app" >> .env
-        echo "FETCH_INTERVAL_HOURS=6" >> .env
-        echo "MAX_ARTICLES_PER_CYCLE=5" >> .env
-        echo "CATEGORIES=technology,business,entertainment" >> .env
-    
-    - name: Run automation
-      run: node index.js full
-      continue-on-error: true  # Continue even if automation fails
-    
-    - name: Check for generated articles
-      id: check-articles
-      run: |
-        if [ -f "output/articles.json" ]; then
-          echo "articles_generated=true" >> $GITHUB_OUTPUT
-          echo "Article count: $(jq '.articles | length' output/articles.json)"
-        else
-          echo "articles_generated=false" >> $GITHUB_OUTPUT
-          echo "No articles generated"
-        fi
-    
-    - name: Commit and push generated articles
-      if: steps.check-articles.outputs.articles_generated == 'true'
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        
-        # Add only article files
-        git add output/articles.json output/articles/*.json 2>/dev/null || true
-        
-        # Check if there are changes to commit
-        if git diff --cached --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "🤖 Automated article update $(date -u +'%Y-%m-%d %H:%M UTC')"
-          git push
-        fi
-    
-    - name: Upload artifacts (for debugging)
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: automation-output
-        path: |
-          output/
-          automation.log
-        retention-days: 7
+      - name: Checkout automation repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run article generation pipeline
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          TREND_PULSE_TOKEN: ${{ secrets.TREND_PULSE_TOKEN }}
+          CATEGORIES: 'technology,business,entertainment,science,health'
+          MAX_ARTICLES_PER_CYCLE: '5'
+          MAX_TOKENS: '2500'
+        run: node index.js
+
+      - name: Commit updated processed-urls.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add processed-urls.json
+          if git diff --cached --quiet; then
+            echo "No changes to processed-urls.json"
+          else
+            git commit -m "chore: update processed URLs [skip ci]"
+            git push
+          fi
