@@ -11,11 +11,11 @@
 
 ### 1. 📰 News Fetching (`fetch-news.js`)
 - Fetches breaking news from NewsAPI (categories: technology, business, entertainment)
-- Uses API key: `3d61fcc2bbe041b39d14462181a8cae9`
+- Uses API key: `your_newsapi_key_here`
 - Saves to SQLite database (`articles.db`)
 
 ### 2. 🤖 AI Content Generation (`generate-articles.js`)
-- Uses DeepSeek AI (API key: `sk-056b5485de144e57b3a5ea257aa6c6fe`)
+- Uses DeepSeek AI (API key: `your_deepseek_api_key_here`)
 - Transforms news headlines into 800-1200 word articles
 - Adds analysis, context, and expert perspectives
 
