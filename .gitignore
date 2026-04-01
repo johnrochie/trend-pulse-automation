@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Database
+articles.db
+*.db
+
+# Logs
+*.log
+automation.log
+daily-digest.log
+
+# Output directories
+output/
+!output/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp

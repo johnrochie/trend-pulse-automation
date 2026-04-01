@@ -1,0 +1,22 @@
+{
+  "name": "trend-pulse-automation",
+  "version": "1.0.0",
+  "description": "AI-powered news automation for Trend Pulse",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "fetch": "node fetch-news.js",
+    "generate": "node generate-articles.js",
+    "publish": "node publish-articles.js",
+    "full-cycle": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.0",
+    "sqlite3": "^5.1.6",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

@@ -1,0 +1,86 @@
+name: Run Trend Pulse Automation
+
+on:
+  schedule:
+    # Run every 6 hours (4 times per day) at 00:00, 06:00, 12:00, 18:00 UTC
+    - cron: '0 */6 * * *'
+  workflow_dispatch:  # Allow manual triggers
+  push:
+    branches: [ main ]
+    paths:
+      - '**.js'
+      - 'package.json'
+      - '.github/workflows/automation.yml'
+
+jobs:
+  automate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Fetch all history for proper git operations
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Create environment file
+      run: |
+        cp .env.example .env
+        echo "NEWSAPI_KEY=${{ secrets.NEWSAPI_KEY }}" >> .env
+        echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> .env
+        echo "DEEPSEEK_BASE_URL=https://api.deepseek.com" >> .env
+        echo "DATABASE_PATH=./articles.db" >> .env
+        echo "SITE_URL=https://trend-pulse.vercel.app" >> .env
+        echo "FETCH_INTERVAL_HOURS=6" >> .env
+        echo "MAX_ARTICLES_PER_CYCLE=5" >> .env
+        echo "CATEGORIES=technology,business,entertainment" >> .env
+    
+    - name: Run automation
+      run: node index.js full
+      continue-on-error: true  # Continue even if automation fails
+    
+    - name: Check for generated articles
+      id: check-articles
+      run: |
+        if [ -f "output/articles.json" ]; then
+          echo "articles_generated=true" >> $GITHUB_OUTPUT
+          echo "Article count: $(jq '.articles | length' output/articles.json)"
+        else
+          echo "articles_generated=false" >> $GITHUB_OUTPUT
+          echo "No articles generated"
+        fi
+    
+    - name: Commit and push generated articles
+      if: steps.check-articles.outputs.articles_generated == 'true'
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        # Add only article files
+        git add output/articles.json output/articles/*.json 2>/dev/null || true
+        
+        # Check if there are changes to commit
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🤖 Automated article update $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
+        fi
+    
+    - name: Upload artifacts (for debugging)
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: automation-output
+        path: |
+          output/
+          automation.log
+        retention-days: 7
