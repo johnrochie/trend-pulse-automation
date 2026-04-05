@@ -177,34 +177,38 @@ CATEGORY: ${article.category}
 DATE: ${date}
 DESCRIPTION: ${article.description || article.content?.substring(0, 300) || 'No description provided'}
 
-Write an 800–1,200 word article with these exact sections using markdown formatting:
+Write an 850–1,200 word article using rich markdown formatting. Follow this structure exactly:
 
-## Introduction
-A compelling 2–3 sentence overview explaining the story and why it matters right now.
+## TL;DR
+A single blockquote (use >) with 2–3 sentences: the single most important thing readers need to know, plus why it matters right now.
+
+## What Happened
+A compelling 2–3 sentence opening that puts the reader immediately in the action. Bold (**) the key entity, number, or event.
 
 ## Key Facts
-A bulleted list (use -) of 4–6 specific facts: names, numbers, dates, organisations involved.
+A bulleted list (use -) of 5–7 specific facts. Bold the most important word or figure in each bullet. Include names, numbers, dates, and organisations.
 
-## Analysis
-3–4 paragraphs of original analysis covering: context, broader implications, and what this means for the industry or society. Be specific — cite real companies, people, and figures.
+## Breaking It Down
+3–4 paragraphs of original analysis. In the most analytically significant paragraph, open with a blockquote (>) containing the single most striking stat, figure, or implication from that paragraph — then expand on it in the paragraph below. Use ** bold for key entities, companies, and figures throughout.
 
-## What's Next
-2–3 paragraphs on upcoming developments, key dates, decisions, or events to watch. Give readers a concrete reason to follow this story.
+## What Comes Next
+2–3 paragraphs on upcoming developments. Use a numbered list (1.) for 3–4 concrete things to watch — specific dates, decisions, or events.
 
-## Related Trends
-2 paragraphs connecting this story to 2–3 broader trends in ${article.category}.
+## The Bigger Picture
+1–2 paragraphs connecting this story to 2–3 broader trends in ${article.category}. Bold the trend names.
 
-## Conclusion
-A 2–3 sentence takeaway that summarises the core significance.
+## Key Takeaways
+A bulleted list (use -) of exactly 4 concise, bold-led takeaways in the format: **[Bold Label]:** explanation. These should be scannable at a glance.
 
 TAGS: [4–5 relevant comma-separated tags]
 
 Rules:
-- Use ## for section headings and ** for bold emphasis
-- Be specific: include real names, figures, and dates
+- Use ## for all section headings, ** for bold emphasis, > for blockquotes
+- Be specific: real names, figures, dates — no vague generalisations
 - Analytical, professional news tone
 - Do not invent quotes or facts not present in the description
-- Do not add an AI disclosure footer`;
+- Do not add an AI disclosure footer
+- Do not wrap the article in a code block`;
 }
 
 async function generateArticle(rawArticle) {
