@@ -277,6 +277,9 @@ async function generateArticle(rawArticle) {
     };
   } catch (err) {
     console.error(`  ❌ Generation failed: ${err.message}`);
+    if (err.response?.data) {
+      console.error(`     API response: ${JSON.stringify(err.response.data)}`);
+    }
     return null;
   }
 }
