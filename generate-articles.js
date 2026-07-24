@@ -18,7 +18,7 @@ class ArticleGenerator {
       const response = await axios.post(
         `${this.baseUrl}/chat/completions`,
         {
-          model: 'deepseek-chat',
+          model: 'deepseek-v4-flash',
           messages: [
             {
               role: 'system',

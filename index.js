@@ -218,7 +218,7 @@ async function generateArticle(rawArticle) {
     const res = await axios.post(
       `${CONFIG.deepseek.baseUrl}/v1/chat/completions`,
       {
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         messages: [
           {
             role: 'system',
