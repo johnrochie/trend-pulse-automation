@@ -146,17 +146,27 @@ async function fetchNews(processedUrls) {
   console.log('\n📰 STEP 1: Fetching news');
   console.log(`  Categories: ${CONFIG.newsapi.categories.join(', ')}`);
 
-  const candidates = [];
+  const byCategory = [];
 
   for (const category of CONFIG.newsapi.categories) {
     const articles = await fetchCategory(category);
-    for (const a of articles) {
-      // Skip removed articles, duplicates, already-processed
-      if (!a.url || !a.title || a.title === '[Removed]') continue;
-      if (processedUrls.has(a.url)) continue;
-      candidates.push(a);
-    }
+    const filtered = articles.filter(
+      a => a.url && a.title && a.title !== '[Removed]' && !processedUrls.has(a.url)
+    );
+    byCategory.push(filtered);
     await sleep(500); // brief pause between NewsAPI calls
+  }
+
+  // Interleave round-robin across categories so a downstream slice(0, N)
+  // picks a diverse mix instead of exhausting whichever category was
+  // fetched first (previously every generated article ended up "technology"
+  // because it's first in CONFIG.newsapi.categories and never runs out).
+  const candidates = [];
+  const maxLen = Math.max(0, ...byCategory.map(c => c.length));
+  for (let i = 0; i < maxLen; i++) {
+    for (const catArticles of byCategory) {
+      if (catArticles[i]) candidates.push(catArticles[i]);
+    }
   }
 
   console.log(`  → ${candidates.length} new unseen articles available`);
