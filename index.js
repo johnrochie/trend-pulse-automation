@@ -165,17 +165,36 @@ async function fetchNews(processedUrls) {
 
 // ─── Step 2: Generate AI articles ─────────────────────────────────────────
 
+// NewsAPI descriptions/content are often hard-truncated mid-sentence (and content
+// fields carry a trailing "[+N chars]" marker). Clean that up and cut at the last
+// full sentence so the model isn't fed a dangling fragment it might over-interpret.
+function cleanSourceText(text, maxLength = 300) {
+  if (!text) return '';
+  let cleaned = text.replace(/\s*\[\+\d+\s*chars\]\s*$/i, '').trim();
+  if (cleaned.length <= maxLength) return cleaned;
+  const truncated = cleaned.slice(0, maxLength);
+  const lastSentenceEnd = Math.max(
+    truncated.lastIndexOf('. '),
+    truncated.lastIndexOf('! '),
+    truncated.lastIndexOf('? ')
+  );
+  return lastSentenceEnd > maxLength * 0.4
+    ? truncated.slice(0, lastSentenceEnd + 1)
+    : truncated;
+}
+
 function buildPrompt(article) {
   const date = new Date(article.publishedAt).toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
+  const description = cleanSourceText(article.description) || cleanSourceText(article.content) || 'No description provided';
   return `Write a comprehensive news article based on this story:
 
 HEADLINE: ${article.title}
 SOURCE: ${article.source?.name || 'Unknown'}
 CATEGORY: ${article.category}
 DATE: ${date}
-DESCRIPTION: ${article.description || article.content?.substring(0, 300) || 'No description provided'}
+DESCRIPTION: ${description}
 
 Write an 850–1,200 word article using rich markdown formatting. Follow this structure exactly:
 
@@ -207,6 +226,9 @@ Rules:
 - Be specific: real names, figures, dates — no vague generalisations
 - Analytical, professional news tone
 - Do not invent quotes or facts not present in the description
+- If the description is incomplete, cut off mid-sentence, or ends abruptly, ignore
+  the cut-off fragment entirely — do not speculate about, interpret, or draw
+  conclusions from what might come after it. Only use complete information.
 - Do not add an AI disclosure footer
 - Do not wrap the article in a code block`;
 }
