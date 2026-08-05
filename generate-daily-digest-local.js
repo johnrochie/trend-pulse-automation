@@ -116,6 +116,7 @@ async function callDeepSeek(prompt, apiKey) {
     },
     body: JSON.stringify({
       model: 'deepseek-v4-flash',
+      thinking: { type: 'disabled' },
       messages: [
         {
           role: 'system',

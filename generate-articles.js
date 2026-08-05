@@ -19,6 +19,7 @@ class ArticleGenerator {
         `${this.baseUrl}/chat/completions`,
         {
           model: 'deepseek-v4-flash',
+          thinking: { type: 'disabled' },
           messages: [
             {
               role: 'system',

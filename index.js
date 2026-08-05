@@ -251,6 +251,7 @@ async function generateArticle(rawArticle) {
       `${CONFIG.deepseek.baseUrl}/v1/chat/completions`,
       {
         model: 'deepseek-v4-flash',
+        thinking: { type: 'disabled' },
         messages: [
           {
             role: 'system',
